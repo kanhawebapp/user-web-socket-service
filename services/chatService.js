@@ -271,6 +271,7 @@ export const finalizeChatSession = async (roomId, prisma, redis, astroId) => {
       const matchedKeywords = fraudKeywords.filter((keyword) =>
         messageText.includes(keyword),
       );
+      console.log("message--------------------------",msg);
 
       if (matchedKeywords.length > 0) {
         fraudLogs.push({
