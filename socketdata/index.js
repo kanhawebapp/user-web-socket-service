@@ -429,7 +429,6 @@ async function socketHandler(io, pubClient, subClient, redisClient) {
               );
             }
           } else {
-            console.log("SSSSSSSSS CHAT else",queueLength);
             socket.emit("queue_position", {
               message: `You are in queue`,
               position: queueLength - 1,
@@ -444,7 +443,6 @@ async function socketHandler(io, pubClient, subClient, redisClient) {
 
       onSafe("call_request", async (data) => {
         try {
-          console.log("call_request-------:", data);
           const astroId = data.astro_id;
           const queueKey = `queue:${astroId}`;
           const roomId = data.room_id;
@@ -500,7 +498,6 @@ async function socketHandler(io, pubClient, subClient, redisClient) {
               );
             }
           } else {
-            console.log("SSSSSSSSSSSSSSSSSSSSSSSSSs call else",queueLength);
             socket.emit("queue_position", {
               message: `You are in queue`,
               position: queueLength - 1,
@@ -692,7 +689,6 @@ async function socketHandler(io, pubClient, subClient, redisClient) {
 
       socket.on("chatCompletedByAdmin", async (data) => {
         try {
-          console.log("chatCompletedByAdmin", data);
           const roomId = data.room_id;
           await finalizeChatSessionByAdmin(
             roomId,
@@ -761,7 +757,6 @@ async function socketHandler(io, pubClient, subClient, redisClient) {
       });
 
       onSafe("cancel_chat_request", async (data) => {
-        console.log("cancelled by user");
         const res = await handleReject(
           data.room_id,
           prisma,
@@ -788,7 +783,6 @@ async function socketHandler(io, pubClient, subClient, redisClient) {
       });
 
       onSafe("cancel_chat_request_by_admin", async (data) => {
-        console.log("cancelled by user");
         const res = await handleRejectByAdmin(
           data.room_id,
           prisma,
@@ -815,7 +809,6 @@ async function socketHandler(io, pubClient, subClient, redisClient) {
       });
 
       onSafe("cancel_call_request", async (data) => {
-        console.log("cancel by user");
         const res = await handleCallReject(
           data.room_id,
           prisma,
@@ -841,7 +834,6 @@ async function socketHandler(io, pubClient, subClient, redisClient) {
       });
 
       socket.on("callCompletedByAdmin", async (data) => {
-        console.log("callCompletedByAdmin", data);
         socket.broadcast.emit("call_ended_by_admin", {
           message: `You have left the ${data.room_id} chat.`,
           roomId: data.room_id,

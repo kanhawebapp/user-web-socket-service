@@ -250,25 +250,6 @@ export async function sendAstrologerNotification(
       };
     }
 
-    console.log(
-      "[Notification] Player ID:",
-      astro.playerId,
-    );
-
-    console.log(
-      "[Notification] Title:",
-      title,
-    );
-
-    console.log(
-      "[Notification] Message:",
-      message,
-    );
-
-    console.log(
-      "[Notification] Data:",
-      data,
-    );
 
     // ---------------------------------------------
     // OneSignal Push

@@ -109,25 +109,7 @@ export const startRedisExpiryService = async (redisClient) => {
       }
     );
 
-    console.log(
-      "[Redis Expiry] =================================="
-    );
-
-    console.log(
-      "[Redis Expiry] SERVICE STARTED SUCCESSFULLY"
-    );
-
-    console.log(
-      "[Redis Expiry] Listening for expired keys"
-    );
-
-    console.log(
-      "[Redis Expiry] Pattern: __keyevent@*__:expired"
-    );
-
-    console.log(
-      "[Redis Expiry] =================================="
-    );
+   
   } catch (error) {
     console.error(
       "[Redis Expiry] Failed to start:",
@@ -164,10 +146,7 @@ const handleCleanupKeyExpired = async (
     const prefix = "cleanup_:";
 
     if (!expiredKey.startsWith(prefix)) {
-      console.log(
-        "[Redis Cleanup] Invalid prefix:",
-        expiredKey,
-      );
+     
 
       return;
     }
@@ -208,15 +187,7 @@ const handleCleanupKeyExpired = async (
       astrologerId,
       userId,
     ] = parts;
-
-    console.log(
-      "[Redis Cleanup] Details:",
-      {
-        roomId,
-        astrologerId,
-        userId,
-      },
-    );
+    
 
     // =================================================
     // CHECK ASTROLOGER PRESENCE
@@ -224,11 +195,6 @@ const handleCleanupKeyExpired = async (
 
     const presenceKey =
       `presence:astro:${astrologerId}`;
-
-    console.log(
-      "[Redis Cleanup] Checking presence:",
-      presenceKey,
-    );
 
     const presenceData =
       await redisClient.get(presenceKey);
@@ -238,15 +204,6 @@ const handleCleanupKeyExpired = async (
     // =================================================
 
     if (!presenceData) {
-      console.log(
-        "[Redis Cleanup] Presence key not found:",
-        presenceKey,
-      );
-
-      console.log(
-        "[Redis Cleanup] Cleanup SKIPPED.",
-      );
-
       return;
     }
 
@@ -288,28 +245,10 @@ const handleCleanupKeyExpired = async (
     // =================================================
 
     if (appState !== "background" || "inactive") {
-      console.log(
-        "[Redis Cleanup] App is NOT in background.",
-      );
-
-      console.log(
-        "[Redis Cleanup] Skipping cleanup.",
-      );
 
       return;
     }
 
-    // =================================================
-    // APP IS BACKGROUND
-    // =================================================
-
-    console.log(
-      "[Redis Cleanup] App is in BACKGROUND.",
-    );
-
-    console.log(
-      "[Redis Cleanup] Proceeding with cleanup...",
-    );
 
     // =================================================
     // DELETE ROOM RELATED KEYS
@@ -341,22 +280,13 @@ const handleCleanupKeyExpired = async (
     const queueKey =
       `queue:${astrologerId}`;
 
-    console.log(
-      "[Redis Cleanup] Checking queue:",
-      queueKey,
-    );
-
     const queueData =
       await redisClient.lRange(
         queueKey,
         0,
         -1,
       );
-
-    console.log(
-      "[Redis Cleanup] Queue items:",
-      queueData.length,
-    );
+   
 
     for (const item of queueData) {
       try {
@@ -374,11 +304,7 @@ const handleCleanupKeyExpired = async (
               0,
               item,
             );
-
-          console.log(
-            "[Redis Cleanup] Queue item removed:",
-            removed,
-          );
+         
         }
       } catch (error) {
         console.error(
@@ -401,11 +327,6 @@ const handleCleanupKeyExpired = async (
         userId,
       );
 
-    console.log(
-      "[Redis Cleanup] User removed from queue set:",
-      removedFromSet,
-    );
-
     // =================================================
     // CLEAR CURRENT CHAT/CALL ONLY IF SAME ROOM
     // =================================================
@@ -426,37 +347,15 @@ const handleCleanupKeyExpired = async (
 
     if (currentChatRoom === roomId) {
       await redisClient.del(currentChatKey);
-
-      console.log(
-        "[Redis Cleanup] Deleted current chat:",
-        currentChatKey,
-      );
+      
     }
 
     if (currentCallRoom === roomId) {
       await redisClient.del(currentCallKey);
-
-      console.log(
-        "[Redis Cleanup] Deleted current call:",
-        currentCallKey,
-      );
+     
     }
-
-    // =================================================
-    // COMPLETED
-    // =================================================
-
-    console.log(
-      "[Redis Cleanup] ==================================",
-    );
-
-    console.log(
-      `[Redis Cleanup] Cleanup completed for room: ${roomId}`,
-    );
-
-    console.log(
-      "[Redis Cleanup] ==================================",
-    );
+    
+   
   } catch (error) {
     console.error(
       "[Redis Cleanup] Error:",

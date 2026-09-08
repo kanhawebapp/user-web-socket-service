@@ -215,7 +215,6 @@ export const handleAcceptChat = async (roomId, prisma, redis, pubClient) => {
 };
 
 export const finalizeChatSession = async (roomId, prisma, redis, astroId) => {
-  console.log("astroId----------finalizeChatSession------:", astroId);
   let lockKey = null;
   let lockValue = null;
 
@@ -271,7 +270,6 @@ export const finalizeChatSession = async (roomId, prisma, redis, astroId) => {
       const matchedKeywords = fraudKeywords.filter((keyword) =>
         messageText.includes(keyword),
       );
-      console.log("message--------------------------",msg);
 
       if (matchedKeywords.length > 0) {
         fraudLogs.push({
@@ -440,11 +438,6 @@ export const finalizeChatSession = async (roomId, prisma, redis, astroId) => {
             userId: session.userId,
           },
         });
-
-        console.log("userID-------", session.userId);
-        console.log("userWallet-------", userWallet);
-        console.log("coinsDeducted-------", coinsDeducted);
-        console.log("userID-------", session.userId);
         //await redis.sRem(`user_in_queue:${astroId}`, session.userId);
         await redis.sRem(`user_in_queue`, session.userId);
         await redis.del(`cleanup_:${roomId}_${astroId}_${session.userId}`);
@@ -552,7 +545,6 @@ export const finalizeChatSession = async (roomId, prisma, redis, astroId) => {
         //     description: "Chat session deduction",
         //   },
         // });
-        console.log("coinsDeducted---------:", coinsDeducted);
 
         /* =========================
              ASTRO TRANSACTION
@@ -572,12 +564,10 @@ export const finalizeChatSession = async (roomId, prisma, redis, astroId) => {
           },
         });
 
-        console.log("coinsEarned---------:", coinsEarned);
 
         /* =========================
              UPDATE SESSION
           ========================= */
-        console.log(durationSec, coinsDeducted, coinsEarned, commission);
         await Promise.all([
           tx.session.update({
             where: {
@@ -1073,7 +1063,6 @@ export const finalizeChatSessionByAdmin = async (
 
 export const processNextRequest = async (astrologerId, redis, pubClient) => {
   try {
-    console.log("processNextRequest-------------:", astrologerId);
     const queueKey = `queue:${astrologerId}`;
     //const queueItem = await redis.lIndex(queueKey, 0);
     const queueList = await redis.lRange(queueKey, 0, -1);
@@ -1136,7 +1125,6 @@ export const processNextRequest = async (astrologerId, redis, pubClient) => {
 };
 export const handleReject = async (roomId, prisma, redis, pubClient, by) => {
   try {
-    console.log("handleReject------------:", roomId);
     const intake = await prisma.intake.findFirst({
       where: { chatId: roomId },
     });
@@ -1177,13 +1165,8 @@ export const handleReject = async (roomId, prisma, redis, pubClient, by) => {
     multi.del(`cleanup_:${roomId}_${intake.astrologerId}_${intake.userId}`);
 
     await multi.exec();
-    console.log(
-      "-----checkkkkkkkkkkkkk-wwwwwwwwww--------------",
-      check,
-      intake.astrologerId,
-    );
+   
     //if (check) {
-    console.log("22222222222222222222222222222", check);
     await updateQueuePositions(queueKey, redis, pubClient);
     //}
     //------for update rejected by status in db-------
@@ -1348,7 +1331,6 @@ export const handleRejectByAdmin = async (
   by,
 ) => {
   try {
-    console.log("handleReject------------:", roomId);
     const intake = await prisma.intake.findFirst({
       where: { chatId: roomId },
     });
@@ -1542,7 +1524,6 @@ export const handleRejectByAdmin = async (
 };
 export const updateQueuePositions = async (queueKey, redis, pubClient) => {
   try {
-    console.log("updateQueuePositions----------------", queueKey);
     const queueList = await redis.lRange(queueKey, 0, -1);
 
     if (!queueList || queueList.length === 0) return;
