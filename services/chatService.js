@@ -215,6 +215,7 @@ export const handleAcceptChat = async (roomId, prisma, redis, pubClient) => {
 };
 
 export const finalizeChatSession = async (roomId, prisma, redis, astroId) => {
+  console.log("finalizeChatSession",roomId,astroId);
   let lockKey = null;
   let lockValue = null;
 
@@ -1063,6 +1064,7 @@ export const finalizeChatSessionByAdmin = async (
 
 export const processNextRequest = async (astrologerId, redis, pubClient) => {
   try {
+    console.log(processNextRequest,astrologerId);
     const queueKey = `queue:${astrologerId}`;
     //const queueItem = await redis.lIndex(queueKey, 0);
     const queueList = await redis.lRange(queueKey, 0, -1);
@@ -1073,6 +1075,7 @@ export const processNextRequest = async (astrologerId, redis, pubClient) => {
     const maximumTime = parsedQueue.maximum_time;
     const userId = parsedQueue.user_id;
     const type = parsedQueue.type;
+    console.log("-------------type--------:",type);
 
     if (!nextRoomId) {
       return null;
@@ -1125,6 +1128,7 @@ export const processNextRequest = async (astrologerId, redis, pubClient) => {
 };
 export const handleReject = async (roomId, prisma, redis, pubClient, by) => {
   try {
+    console.log("handleReject---------:",roomId,by);
     const intake = await prisma.intake.findFirst({
       where: { chatId: roomId },
     });
@@ -1524,6 +1528,7 @@ export const handleRejectByAdmin = async (
 };
 export const updateQueuePositions = async (queueKey, redis, pubClient) => {
   try {
+    console.log("queueKey------------:",queueKey);
     const queueList = await redis.lRange(queueKey, 0, -1);
 
     if (!queueList || queueList.length === 0) return;

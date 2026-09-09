@@ -1,4 +1,5 @@
 export const handleAcceptCall = async (roomId, prisma, redis, pubClient) => {
+  console.log("handleAcceptCall------:",roomId);
   const intake = await prisma.intake.findFirst({
     where: { chatId: roomId },
   });
@@ -212,6 +213,7 @@ export const handleCallReject = async (
   by,
 ) => {
   try {
+    console.log("handleCallReject---------:",roomId,by);
     const intake = await prisma.intake.findFirst({
       where: { chatId: roomId },
     });
@@ -404,6 +406,7 @@ export const finalizeCallSession = async (roomId, prisma, redis, astroId) => {
     /* =========================
        DELETE REDIS CHAT LIST
     ========================= */
+    console.log("finalizeCallSession-------------:",roomId,astroId);
     const currentRoom = await redis.get(`current_call:${astroId}`);
     if (currentRoom) {
       await redis.del(`current_call:${astroId}`);
@@ -646,7 +649,7 @@ export const finalizeCallSessionByAdmin = async (
    COMPLETE SESSION + WALLET SYNC (ATOMIC)
 ========================= */
     const active_call = await redis.get(`active_call:${roomId}`);
-
+    console.log("finalizeCallSessionByAdmin--------:",roomId,astroId);
     if (active_call) {
       const parsed = JSON.parse(active_call);
 
@@ -790,6 +793,7 @@ export const finalizeCallSessionByAdmin = async (
 
 export const removeUserFromQueue = async ({ redis, queueKey, roomId }) => {
   try {
+    console.log("removeUserFromQueue-------------:",roomId);
     // =========================
     // GET QUEUE
     // =========================
@@ -837,6 +841,7 @@ export const removeUserFromQueue = async ({ redis, queueKey, roomId }) => {
 
 export const updateQueuePositions = async (queueKey, redis, pubClient) => {
   try {
+    console.log("updateQueuePositions------------:",queueKey);
     const queueList = await redis.lRange(queueKey, 0, -1);
 
     if (!queueList || queueList.length === 0) return;
