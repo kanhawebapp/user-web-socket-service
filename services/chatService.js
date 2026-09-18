@@ -1528,7 +1528,7 @@ export const handleRejectByAdmin = async (
 };
 export const updateQueuePositions = async (queueKey, redis, pubClient) => {
   try {
-    console.log("queueKey------------:",queueKey);
+    console.log("queueKey----updateQueuePositions--------:",queueKey);
     const queueList = await redis.lRange(queueKey, 0, -1);
 
     if (!queueList || queueList.length === 0) return;
