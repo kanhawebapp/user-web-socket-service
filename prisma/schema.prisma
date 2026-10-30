@@ -179,6 +179,9 @@ model User {
   source               String?
   callRecordings CallRecording[]
   couponRedemptions CouponRedemption[]
+  pujaBookings PujaBooking[]
+  pujaPaymentOrders PujaPaymentOrder[]
+  servicesBankPaymentLogs ServicesBankPaymentLog[]
 
   @@unique([countryCode, mobile])
 }
@@ -267,7 +270,7 @@ model Astrologer {
 
   about String
 
-  rating Float?  @default(0)
+  rating Float? @default(0)
   status Boolean @default(false)
 
   tags  String
@@ -282,46 +285,60 @@ model Astrologer {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
- isEligibleChat  Boolean @default(false)
+
+  isEligibleChat  Boolean @default(false)
   isEligibleCall  Boolean @default(false)
   isEligibleVideo Boolean @default(false)
   isEligibleAudio Boolean @default(false)
-  isCallActive  Boolean @default(false)
-  isChatActive  Boolean @default(false)
-  isLiveActive  Boolean @default(false)
-  isBusy        Boolean @default(false)
-  isOnline      Boolean @default(false)
+
+  isCallActive Boolean @default(false)
+  isChatActive Boolean @default(false)
+  isLiveActive Boolean @default(false)
+  isBusy       Boolean @default(false)
+  isOnline     Boolean @default(false)
+
   isPromotional Boolean @default(false)
+
+  // Soft delete
+  isDeleted Boolean @default(false)
+
+  // Delete information
+  deletedAt     DateTime?
+  deletedById   String?
+  deletedByName String?
+  deleteRemark  String?
 
   approvedBy Staff?     @relation("ApprovedAstrologers", fields: [approvedById], references: [id])
   createdBy  Staff?     @relation("CreatedAstrologers", fields: [createdById], references: [id])
   kycDetail  KycDetail?
 
-  intakes           Intake[]
-  addresses         Address[]
-  experiences       ExperiencePlatform[]
-  interviews        Interview[]
-  documents         AstrologerDocument[]
-  rejectionHistory  AstrologerRejectionHistory[]
-  wallet            AstrologerWallet?
-  sessions          Session[]
-  reviews           Review[]
-  pricing           AstrologerPricing[]
-  applications      AstrologerApplication[]
+  intakes          Intake[]
+  addresses        Address[]
+  experiences      ExperiencePlatform[]
+  interviews       Interview[]
+  documents        AstrologerDocument[]
+  rejectionHistory AstrologerRejectionHistory[]
+  wallet           AstrologerWallet?
+  sessions         Session[]
+  reviews          Review[]
+  pricing          AstrologerPricing[]
+  applications     AstrologerApplication[]
   offers            AstrologerOffer[]
-  giftsReceived     GiftHistory[]                @relation("AstrologerGiftHistory")
-  followers         AstrologerFollow[]
-  serviceBookings   ServiceBooking[]
+  giftsReceived    GiftHistory[] @relation("AstrologerGiftHistory")
+  followers        AstrologerFollow[]
+  serviceBookings  ServiceBooking[]
   noticeAstrologers NoticeAstrologer[]
-  serviceMappings   ServiceAstrologer[]
-  liveStreams       LiveStream[]
-  callRecordings CallRecording[]
-  isDeleted Boolean @default(false)
-  payouts AstrologerPayout[] 
-  tax AstrologerTax?
+  serviceMappings  ServiceAstrologer[]
+  liveStreams      LiveStream[]
+  callRecordings   CallRecording[]
+  payouts          AstrologerPayout[]
+  tax              AstrologerTax?
+
   @@index([rating])
   @@index([experience])
 }
+
+
 
 model ServiceAstrologer {
   id String @id @default(cuid())
@@ -600,6 +617,7 @@ model Gift {
   image         String?
   status        String        @default("active")
   giftHistories GiftHistory[]
+  liveGiftTransactions LiveGiftTransaction[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 }
@@ -672,12 +690,14 @@ model RechargePack {
   paymentOrders PaymentOrder[]
   transactions  WalletTransaction[]
   coupons       Coupon[]            @relation("CouponToRechargePack")
- hideAfterFirstRecharge Boolean @default(false)
+  hideAfterFirstRecharge Boolean @default(false)
+  isFirstTimeOffer Boolean @default(false)
   @@index([isActive])
   @@index([price])
   @@index([coins])
   @@index([createdAt])
 }
+
 
 model UserWallet {
   id     String @id @default(uuid())
@@ -928,6 +948,7 @@ model Coupon {
   // ADD THESE
   paymentOrders     PaymentOrder[]
   couponRedemptions CouponRedemption[]
+  pujaPaymentOrders PujaPaymentOrder[] @relation("CouponPujaPaymentOrders")
   servicePaymentOrders ServicePaymentOrder[] @relation("CouponServicePaymentOrders")
 }
 
@@ -1442,6 +1463,7 @@ model ServicePaymentOrder {
 
   couponId String?
   coupon Coupon? @relation("CouponServicePaymentOrders", fields: [couponId], references: [id])
+  couponRedemption CouponRedemption?
 
   discount Float @default(0)
   cashback Float @default(0)
@@ -1565,23 +1587,24 @@ model LiveStream {
   id String @id @default(uuid())
 
   astrologerId String
-  astrologer Astrologer @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
+  astrologer   Astrologer @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
 
-  title String
-
+  title       String
   channelName String
-
-  // ADD THIS
-  chatRoomId String?
+  chatRoomId  String?
 
   status LiveStatus @default(SCHEDULED)
 
   scheduledAt DateTime?
+  scheduledEndAt  DateTime?
+  startedAt   DateTime?
+  endedAt     DateTime?
+  totalViews   Int        @default(0)
 
   createdAt DateTime @default(now())
-
-  endedAt DateTime?
+  updatedAt DateTime @updatedAt
 }
+
 
 enum LiveStatus {
   SCHEDULED
@@ -1589,6 +1612,27 @@ enum LiveStatus {
   ENDED
 }
 
+
+
+model LiveGiftTransaction {
+  id           String   @id @default(uuid())
+  streamId     String
+  senderId     String
+  astrologerId String
+  giftId       String
+
+  quantity  Int      @default(1)
+  totalCoins Int
+
+  status    String   @default("SUCCESS")
+  createdAt DateTime @default(now())
+  
+  gift   Gift   @relation(fields: [giftId], references: [id])
+
+  @@index([streamId, createdAt])
+  @@index([senderId, createdAt])
+  @@index([astrologerId, createdAt])
+}
 
 
 model CallRecording {
@@ -1651,9 +1695,15 @@ model CouponRedemption {
   userId String
   user User @relation(fields: [userId], references: [id])
 
-  paymentOrderId String @unique
-  paymentOrder PaymentOrder @relation(fields: [paymentOrderId], references: [id])
+  // Recharge payment
+  paymentOrderId String? @unique
+  paymentOrder PaymentOrder? @relation(fields: [paymentOrderId], references: [id])
 
+  // Service booking payment
+  servicePaymentOrderId String? @unique
+  servicePaymentOrder ServicePaymentOrder? @relation(fields: [servicePaymentOrderId], references: [id])
+   pujaPaymentOrderId String?           @unique
+  pujaPaymentOrder     PujaPaymentOrder?    @relation(fields: [pujaPaymentOrderId], references: [id])
   discount Float
 
   createdAt DateTime @default(now())
@@ -1827,5 +1877,218 @@ sessionDate DateTime
   @@index([astrologerId])
   @@index([status])
   @@index([requestedByStaffId])
+  @@index([createdAt])
+}
+
+//-----------------puja tables-------------------
+//-----------------puja tables-------------------
+
+
+model PujaService {
+  id               String   @id @default(uuid())
+
+  // Basic Information
+  title            String
+  slug             String   @unique
+  image            String
+  category         String?
+
+  // Description
+  shortDescription String?
+  description      String?  @db.Text
+  benefits         String?  @db.Text
+  howToPerform     String?  @db.Text
+  packaging        String?  @db.Text
+
+  // Pricing (derived from the first sorted mantra option)
+  price            Float
+  mrp              Float?
+  discount         Float?
+
+  // Social Proof
+  customersCount   Int      @default(0)
+  rating           Float    @default(0)
+
+  // Relations
+  mantraOptions    PujaMantraOption[]
+  faqs             PujaFAQ[]
+  reviews          PujaReview[]
+  bookings         PujaBooking[]
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([category])
+  @@index([createdAt])
+}
+
+model PujaMantraOption {
+  id            String      @id @default(uuid())
+  name          String
+
+  // Individual mantra pricing
+  originalPrice Float
+  offerPrice    Float
+  sortOrder     Int         @default(0)
+
+  // Relation
+  pujaId        String
+  puja          PujaService @relation(fields: [pujaId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime    @default(now())
+
+  @@index([pujaId])
+  @@index([pujaId, sortOrder])
+}
+
+
+model PujaFAQ {
+  id        String      @id @default(uuid())
+  question  String
+  answer    String      @db.Text
+
+  pujaId    String
+  puja      PujaService @relation(fields: [pujaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([pujaId])
+}
+
+model PujaReview {
+  id        String           @id @default(uuid())
+  pujaId    String
+  puja      PujaService      @relation(fields: [pujaId], references: [id], onDelete: Cascade)
+  userId    String?
+  userName  String
+  email     String?
+  title     String?
+  rating    Int
+  comment   String           @db.Text
+  image     String?
+  status    PujaReviewStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([pujaId])
+  @@index([userId])
+  @@index([status])
+}
+
+enum PujaReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model PujaBooking {
+  id String @id @default(cuid())
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+
+  pujaId String
+  puja   PujaService @relation(fields: [pujaId], references: [id])
+
+  // Store the selected option snapshot
+  mantraOptionId   String?
+  mantraOptionName String?
+
+  quantity   Int
+  unitPrice  Float
+  totalAmount Float
+
+  paymentStatus PaymentStatus @default(PENDING)
+  bookingStatus BookingStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  paymentOrders PujaPaymentOrder[]
+
+  @@index([userId])
+  @@index([pujaId])
+  @@index([paymentStatus])
+  @@index([bookingStatus])
+}
+
+model PujaPaymentOrder {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  bookingId String
+  booking   PujaBooking @relation(fields: [bookingId], references: [id])
+
+  razorpayOrderId String? @unique
+
+  totalAmount   Float
+  walletAmount  Float @default(0)
+  payableAmount Float
+
+  couponId String?
+  coupon   Coupon? @relation("CouponPujaPaymentOrders", fields: [couponId], references: [id])
+
+  discount Float @default(0)
+  cashback Float @default(0)
+
+  status PaymentOrderStatus @default(CREATED)
+  couponRedemptions CouponRedemption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([bookingId])
+  @@index([status])
+  @@index([couponId])
+}
+
+
+enum BankPaymentServiceType {
+  PUJA
+  SERVICE
+}
+
+model ServicesBankPaymentLog {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  serviceType BankPaymentServiceType
+  serviceId String
+  bookingId String?
+  amount Float
+  provider PaymentProvider
+  razorpayOrderId String
+  razorpayPaymentId String? @unique
+  status PaymentStatus
+  invoiceNo String? @unique
+  taxableAmount Float?
+  gstRate Float?
+  cgst Float?
+  sgst Float?
+  igst Float?
+  totalTax Float?
+  totalAmount Float?
+  pgChargeRate Float?
+  pgCharge Float?
+  pgIgst Float?
+  pgTotal Float?
+  receivableAmount Float?
+  country String?
+  state String?
+  city String?
+  platform String?
+  couponId String?
+  discount Float? @default(0)
+  cashback Float? @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
+  @@index([serviceType, serviceId])
+  @@index([bookingId])
+  @@index([razorpayOrderId])
+  @@index([status])
   @@index([createdAt])
 }
